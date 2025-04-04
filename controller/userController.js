@@ -42,41 +42,25 @@ const createUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
-  try {
-    const user = await client.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    if (user) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    const hashPassword = await bcrypt.hash(password, 10);
-    await client.user.create({
-      data: {
-        name,
-        email,
-        password: hashPassword,
-        role,
-      },
-    });
-    await writeAuditLog(name, "User created");
-    res.status(201).json({
-      success: true,
-      message: "User created successfully",
-    });
-  } catch (err) {
-    res.status(500).json({
+  const { email, password } = req.body;
+  const user = await client.user.findUnique({
+    where: {
+      email,
+    },
+  });
+  if (!user || !bcrypt.compare(password, user.password)) {
+    return res.status(401).json({
       success: false,
-      message: err.message,
+      message: "Invalid credentials",
     });
   }
+  const token = jwt.sign({ id: user.id, role: user.role }, "secret");
+  res.json({
+    success: true,
+    message: "Logged in successfully",
+    token,
+    user,
+  });
 };
 
 const sendOtp = async (req, res) => {

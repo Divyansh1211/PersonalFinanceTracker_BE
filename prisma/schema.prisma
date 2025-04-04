@@ -19,15 +19,17 @@ enum Role {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  name      String?    @default("Anonymous")
-  password  String?
-  role      Role       @default(USER)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Expenses  Expenses[]
-  Budget    Budget[]
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String?          @default("Anonymous")
+  password       String?
+  role           Role             @default(USER)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  Expenses       Expenses[]
+  Budget         Budget[]
+  TransactionLog TransactionLog[]
+  ReversalLog    ReversalLog[]
 }
 
 enum Category {
@@ -59,4 +61,22 @@ model Budget {
   total_limit    Int
   category_limit Json
   createdAt      DateTime @default(now())
+}
+
+model TransactionLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expenseId String?
+  operation String
+  snapshot  Json
+  createdAt DateTime @default(now())
+}
+
+model ReversalLog {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  originalLogId String
+  reversedAt    DateTime @default(now())
 }

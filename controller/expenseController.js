@@ -1,4 +1,4 @@
-const { autoCategorize } = require("../helper");
+const { autoCategorize, logTransaction } = require("../helper");
 const { client } = require("../utils");
 
 const createExpense = async (req, res) => {
@@ -16,6 +16,7 @@ const createExpense = async (req, res) => {
         userId,
       },
     });
+    await logTransaction(userId, result.id, "CREATE", result);
     res.json({
       success: true,
       result,
@@ -62,6 +63,7 @@ const deleteExpense = async (req, res) => {
         message: "Expense not found",
       });
     }
+    await logTransaction(userId, id, "DELETE", result);
     res.json({
       success: true,
       message: "Expense deleted successfully",

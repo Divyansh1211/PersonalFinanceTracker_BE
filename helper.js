@@ -1,8 +1,30 @@
 const fs = require("fs");
+const cron = require("node-cron");
+const { checkAndNotify } = require("./controller/notification");
+const { client } = require("./utils");
+
 const writeAuditLog = async (name, message) => {
   const data = new Date().toISOString();
   fs.appendFile("audit.log", `${data} ${name}: ${message}\n`, (err) => {
     if (err) throw err;
+  });
+};
+
+const startNotificationCron = () => {
+  cron.schedule("0 8 * * *", async () => {
+    console.log("Running daily notification job");
+    await checkAndNotify();
+  });
+};
+
+const logTransaction = async (userId, expenseId, operation, snapshot) => {
+  await client.transactionLog.create({
+    data: {
+      userId,
+      expenseId,
+      operation,
+      snapshot,
+    },
   });
 };
 
@@ -15,4 +37,9 @@ const autoCategorize = (notes) => {
   return "Other";
 };
 
-module.exports = { writeAuditLog, autoCategorize };
+module.exports = {
+  writeAuditLog,
+  autoCategorize,
+  startNotificationCron,
+  logTransaction,
+};

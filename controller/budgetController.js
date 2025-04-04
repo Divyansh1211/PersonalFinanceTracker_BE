@@ -6,7 +6,7 @@ const setBudget = async (req, res) => {
   const data = req.body;
   try {
     const existing = await client.budget.findFirst({
-      where: { userId, month: new Date(data.month) },
+      where: { userId, month: startOfMonth(new Date(data.month)) },
     });
 
     if (existing) {
@@ -21,7 +21,7 @@ const setBudget = async (req, res) => {
       await client.budget.create({
         data: {
           userId,
-          month: new Date(data.month),
+          month: startOfMonth(new Date(data.month)),
           total_limit: data.total_limit,
           category_limit: data.category_limit,
         },
@@ -41,7 +41,7 @@ const setBudget = async (req, res) => {
 
 const getBudget = async (req, res) => {
   const userId = req.user.id;
-  const month = new Date(req.params.month);
+  const month = startOfMonth(new Date(req.params.month));
   try {
     const data = await client.budget.findFirst({
       where: { userId, month },
@@ -63,7 +63,7 @@ const getMonthlySummary = async (req, res) => {
   const month = req.params.month;
   try {
     const budget = await client.budget.findFirst({
-      where: { userId, month: new Date(month) },
+      where: { userId, month: startOfMonth(new Date(month)) },
     });
 
     const expenses = await client.expenses.findMany({
