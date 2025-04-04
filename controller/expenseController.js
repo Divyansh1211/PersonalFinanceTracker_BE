@@ -48,22 +48,49 @@ const getExpenses = async (req, res) => {
   }
 };
 
-const updateExpense = async (req, res) => {};
+const updateExpense = async (req, res) => {
+  const userId = req.user.id;
+  const { id, amount, category, tags, notes } = req.body;
+  const updatedCategory = category || autoCategorize(notes || "");
+  try {
+    const existing = await client.expenses.findUnique({ where: { id } });
+    if (!existing) {
+      return res.json({ success: false, message: "Expense not found" });
+    }
+    await client.expenses.update({
+      where: { id },
+      data: {
+        amount,
+        category: updatedCategory,
+        tags: tags || [],
+        notes: notes || "",
+      },
+    });
+    await logTransaction(userId, id, "UPDATE", existing);
+    res.json({
+      success: true,
+      message: "Expense updated successfully",
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 const deleteExpense = async (req, res) => {
   const userId = req.user.id;
   const { id } = req.params;
   try {
-    const result = await client.expenses.deleteMany({
+    const existing = await client.expenses.findUnique({ where: { id } });
+    if (!existing) {
+      return res.json({ success: false, message: "Expense not found" });
+    }
+    await client.expenses.deleteMany({
       where: { id, userId },
     });
-    if (!result) {
-      return res.json({
-        success: false,
-        message: "Expense not found",
-      });
-    }
-    await logTransaction(userId, id, "DELETE", result);
+    await logTransaction(userId, id, "DELETE", existing);
     res.json({
       success: true,
       message: "Expense deleted successfully",

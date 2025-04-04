@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-async function authMiddleware(req, res, next) {
+const authMiddleware = (req, res, next) => {
   try {
     const token = req.headers.authorization;
     if (!token) {
@@ -12,6 +12,13 @@ async function authMiddleware(req, res, next) {
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-}
+};
 
-module.exports = { authMiddleware };
+const isAdmin = (req, res, next) => {
+  if (req.user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  next();
+};
+
+module.exports = { authMiddleware, isAdmin };
