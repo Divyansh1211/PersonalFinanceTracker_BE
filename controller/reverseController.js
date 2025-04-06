@@ -2,7 +2,6 @@ const { client } = require("../utils");
 
 const reverseTransaction = async (req, res) => {
   const userId = req.user.id;
-
   try {
     const reversedIds = await client.reversalLog.findMany({
       where: { userId },
@@ -36,6 +35,7 @@ const reverseTransaction = async (req, res) => {
           date: new Date(snapshot.date),
           tags: snapshot.tags,
           notes: snapshot.notes,
+          updatedAt: new Date(),
         },
       });
     } else if (operation === "DELETE") {
@@ -48,9 +48,12 @@ const reverseTransaction = async (req, res) => {
           date: new Date(snapshot.date),
           tags: snapshot.tags,
           notes: snapshot.notes,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
     }
+    
     await client.reversalLog.create({
       data: {
         userId,
