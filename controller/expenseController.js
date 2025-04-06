@@ -50,10 +50,12 @@ const getExpenses = async (req, res) => {
 
 const updateExpense = async (req, res) => {
   const userId = req.user.id;
-  const { id, amount, category, tags, notes } = req.body;
+  const id = req.params.id;
+  const { amount, category, tags, notes } = req.body;
   const updatedCategory = category || autoCategorize(notes || "");
   try {
     const existing = await client.expenses.findUnique({ where: { id } });
+    console.log(existing);
     if (!existing) {
       return res.json({ success: false, message: "Expense not found" });
     }

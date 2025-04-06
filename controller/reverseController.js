@@ -2,6 +2,7 @@ const { client } = require("../utils");
 
 const reverseTransaction = async (req, res) => {
   const userId = req.user.id;
+
   try {
     const reversedIds = await client.reversalLog.findMany({
       where: { userId },
@@ -21,21 +22,32 @@ const reverseTransaction = async (req, res) => {
     }
 
     const { operation, snapshot } = lastLog;
+    let reversedTransaction;
 
     if (operation === "CREATE") {
-      await client.transactionLog.delete({ where: { id: lastLog.id } });
+      await client.expenses.delete({ where: { id: snapshot.id } });
+      reversedTransaction = `Transaction reversed by deleting ${snapshot.category} - ${snapshot.amount} $`;
     } else if (operation === "UPDATE") {
-      await client.transactionLog.update({
+      reversedTransaction = await client.expenses.update({
         where: { id: snapshot.id },
-        data: snapshot,
+        data: {
+          amount: snapshot.amount,
+          category: snapshot.category,
+          date: new Date(snapshot.date),
+          tags: snapshot.tags,
+          notes: snapshot.notes,
+        },
       });
     } else if (operation === "DELETE") {
-      await client.transactionLog.create({
+      reversedTransaction = await client.expenses.create({
         data: {
+          id: snapshot.id,
           userId: snapshot.userId,
-          expenseId: snapshot.id,
-          operation: "CREATE",
-          snapshot,
+          amount: snapshot.amount,
+          category: snapshot.category,
+          date: new Date(snapshot.date),
+          tags: snapshot.tags,
+          notes: snapshot.notes,
         },
       });
     }
@@ -45,9 +57,11 @@ const reverseTransaction = async (req, res) => {
         originalLogId: lastLog.id,
       },
     });
-    res.json({ success: true, message: "Transaction reversed successfully" });
+
+    res.json({ success: true, reversedTransaction })
   } catch (err) {
-    return res.json({ success: false, message: err.message });
+    console.error(" Error reversing transaction:", err);
+    res.json({ success: false, message: err.message });
   }
 };
 

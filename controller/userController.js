@@ -64,7 +64,7 @@ const loginUser = async (req, res) => {
 };
 
 const sendOtp = async (req, res) => {
-  const otp = 123456;
+  const otp = "123456";
   res.status(200).json({
     success: true,
     message: "OTP sent successfully",
@@ -81,7 +81,7 @@ const verifyOtp = async (req, res) => {
       },
     });
     if (user) {
-      if (otp === 123456) {
+      if (otp == 123456) {
         const token = jwt.sign({ id: user.id, role: user.role }, "secret");
         await writeAuditLog(user.name, "User logged in");
         return res.status(200).json({
